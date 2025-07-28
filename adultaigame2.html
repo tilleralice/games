@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Financial Literacy Game 2</title> <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+        /* The CSS here is global to the block, so IDs aren't critical.
+           However, if any CSS targets specific IDs, those would need updating too.
+           For now, assume this CSS is fine as is, targeting general classes. */
+        body {
+            font-family: 'Press Start 2P', cursive;
+            background-color: #1a202c; /* Dark background for a game feel */
+            color: #e2e8f0; /* Light text */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 1rem;
+            box-sizing: border-box;
+        }
+        .game-container {
+            background-color: #2d3748;
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            width: 100%;
+            max-width: 700px;
+            text-align: center;
+        }
+        .question-text { font-size: 1.15rem; margin-bottom: 1.5rem; line-height: 1.6; color: #a0aec0; min-height: 50px; }
+        .answer-btn { background-color: #4a5568; color: #e2e8f0; border: 2px solid #718096; padding: 0.75rem 1rem; margin: 0.5rem; border-radius: 0.5rem; cursor: pointer; transition: all 0.3s ease; font-size: 0.9rem; width: calc(100% - 1rem); line-height: 1.4; }
+        .answer-btn:hover { background-color: #718096; border-color: #a0aec0; }
+        .answer-btn.correct { background-color: #38a169; border-color: #2f855a; color: white; }
+        .answer-btn.incorrect { background-color: #e53e3e; border-color: #c53030; color: white; }
+        .score-text { font-size: 1.125rem; margin-top: 1.5rem; color: #cbd5e0; }
+        .meme-container { margin-top: 1.5rem; min-height: 150px; }
+        .meme-image { max-width: 80%; max-height: 150px; height: auto; border-radius: 0.5rem; border: 3px solid #4a5568; }
+        .meme-caption { margin-top: 0.5rem; font-size: 0.875rem; color: #a0aec0; }
+        .feedback-message { margin-top: 1rem; padding: 0.75rem; border-radius: 0.5rem; font-size: 1rem; }
+        .feedback-message.correct { background-color: #38a169; color: white; }
+        .feedback-message.incorrect { background-color: #e53e3e; color: white; }
+        .control-btn { background-color: #f6e05e; color: #1a202c; border: 2px solid #ecc94b; padding: 0.75rem 1.5rem; margin-top: 1.5rem; border-radius: 0.5rem; cursor: pointer; transition: background-color 0.3s ease; font-size: 1rem; }
+        .control-btn:hover { background-color: #ecc94b; }
+        @media (min-width: 640px) {
+            .answer-options-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+            .answer-btn { width: auto; }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1 class="text-3xl font-bold mb-6 text-yellow-400">Finance Whiz Quiz!</h1>
+
+        <div id="game2-question-area"> <p id="game2-question-text" class="question-text">Loading question...</p> <div id="game2-answer-options" class="answer-options-grid"> </div>
+        </div>
+
+        <div id="game2-feedback-area" class="mt-4"> <p id="game2-feedback-message" class="feedback-message" style="display: none;"></p> </div>
+
+        <div id="game2-meme-area" class="meme-container" style="display: none;"> <img id="game2-meme-image" src="" alt="Money Meme" class="meme-image mx-auto"> <p id="game2-meme-caption" class="mt-2 text-sm text-gray-400"></p> </div>
+
+        <p id="game2-score-text" class="score-text">Score: 0 / 0</p> <button id="game2-next-question-btn" class="control-btn" style="display: none;">Next Question</button> <button id="game2-play-again-btn" class="control-btn" style="display: none;">Play Again?</button> </div>
+
+    <script>
+        // --- Game Configuration ---
+        const questionsPerGame2 = 10; // Use a unique constant name
+        // ... (Keep your masterQuestionList and memes arrays as they are) ...
+        const masterQuestionList = [
+            // Budgeting & Cash Flow
+            { question: "What is the primary purpose of creating a personal budget?", options: ["To restrict all fun spending", "To track where your money goes and plan spending", "To qualify for a loan", "To calculate yearly taxes"], correctAnswerIndex: 1 },
+            { question: "The 50/30/20 budgeting rule suggests allocating 20% of your income towards:", options: ["Housing and utilities", "Entertainment and hobbies", "Savings and debt repayment", "Groceries and transportation"], correctAnswerIndex: 2 },
+            { question: "Rent for an apartment is typically considered what type of expense?", options: ["Variable expense", "Discretionary expense", "Fixed expense", "Unexpected expense"], correctAnswerIndex: 2 },
+            { question: "What does the financial principle 'pay yourself first' mean?", options: ["Spend money on wants before needs", "Treat yourself to a gift with every paycheck", "Automate savings contributions before paying other bills", "Pay all your bills on the first of the month"], correctAnswerIndex: 2 },
+            { question: "True or False: Tracking every penny you spend for a month is a good way to understand your spending habits.", options: ["True", "False"], correctAnswerIndex: 0 },
+            // Banking
+            { question: "What does FDIC (or NCUA for credit unions) insurance primarily cover?", options: ["Investment losses", "Stolen cash from your wallet", "Deposits in your bank account up to a certain limit", "Damage to your apartment"], correctAnswerIndex: 2 },
+            { question: "An 'overdraft fee' from a bank is typically charged when you:", options: ["Withdraw money from an ATM too often", "Spend more money than you have in your checking account", "Make a late credit card payment", "Open a new savings account"], correctAnswerIndex: 1 },
+            // Saving
+            { question: "A common recommendation for an emergency fund is to save how many months of essential living expenses?", options: ["1 month", "1-2 months", "3-6 months", "12 months"], correctAnswerIndex: 2 },
+            { question: "Where is the most suitable place to keep your emergency fund?", options: ["Under your mattress", "In a high-yield savings account", "Invested in the stock market", "In your checking account"], correctAnswerIndex: 1 },
+            { question: "A 'sinking fund' is best described as:", options: ["Money set aside for unexpected emergencies", "A type of high-risk investment", "Saving small amounts regularly for a specific future expense (e.g., car repair)", "A fund that is losing value"], correctAnswerIndex: 2 },
+            // Income & Taxes
+            { question: "What is the main difference between 'gross pay' and 'net pay'?", options: ["Gross pay is for full-time, net pay for part-time", "Gross pay is after taxes, net pay is before taxes", "Gross pay is before deductions, net pay is take-home pay after deductions", "There is no difference"], correctAnswerIndex: 2 },
+            { question: "Which U.S. tax form do you fill out for your employer to determine the amount of federal income tax to withhold from your paycheck?", options: ["Form 1040", "Form W-2", "Form W-4", "Form 1099"], correctAnswerIndex: 2 },
+            // Credit & Debt
+            { question: "Why is having a good credit score important when renting an apartment?", options: ["It's not important for renting", "Landlords may use it to assess your reliability as a tenant", "It determines your utility rates", "It's only for buying a house"], correctAnswerIndex: 1 },
+            { question: "What does 'credit utilization ratio' refer to?", options: ["How often you use your credit card", "The amount of credit you're using compared to your total credit limit", "The interest rate on your credit card", "The number of credit cards you have"], correctAnswerIndex: 1 },
+            { question: "To best avoid paying credit card interest, you should:", options: ["Only make the minimum payment each month", "Pay the full balance by the due date each month", "Use the card for small purchases only", "Get a card with a high credit limit"], correctAnswerIndex: 1 },
+            { question: "Payday loans are often considered 'predatory' because they typically have:", options: ["Very low interest rates", "Long repayment terms", "Extremely high fees and interest rates", "Government backing"], correctAnswerIndex: 2 },
+            // Housing Costs (Apartment Specific)
+            { question: "What is a 'lease agreement' when renting an apartment?", options: ["A list of recommended furniture", "A daily schedule for cleaning", "A legally binding contract between tenant and landlord outlining terms of rental", "An application to rent"], correctAnswerIndex: 2 },
+            { question: "Why is renter's insurance highly recommended, even if not required by the landlord?", options: ["It pays your monthly rent if you lose your job", "It covers repairs to the building structure", "It protects your personal belongings from theft or damage and provides liability coverage", "It guarantees your security deposit refund"], correctAnswerIndex: 2 },
+            { question: "If you move into an apartment on the 15th of the month, and the landlord charges you for only the days you occupy it that first month, this is called:", options: ["A security deposit", "Prorated rent", "A late fee", "An application fee"], correctAnswerIndex: 1 },
+            { question: "What is a 'security deposit' primarily for?", options: ["To pay the first month's rent", "To cover potential damages to the property beyond normal wear and tear", "To pay for utilities", "A fee for the landlord's time"], correctAnswerIndex: 1 },
+            // Daily Living Expenses
+            { question: "Which of these is generally the most cost-effective way to manage food expenses?", options: ["Eating out for every meal", "Subscribing to a meal delivery service for all meals", "Planning meals and cooking at home most of the time", "Buying pre-packaged snacks and microwave meals"], correctAnswerIndex: 2 },
+            { question: "A good strategy for grocery shopping on a budget includes:", options: ["Shopping when you're hungry", "Buying only brand names", "Making a list and sticking to it", "Ignoring sales and promotions"], correctAnswerIndex: 2 },
+            // Insurance (Beyond Housing/Car)
+            { question: "In health insurance, what is a 'deductible'?", options: ["The monthly cost of your insurance plan", "A fixed fee you pay for specific services like a doctor's visit", "The amount you must pay out-of-pocket for covered services before your insurance starts paying", "The maximum amount your insurance will pay per year"], correctAnswerIndex: 2 },
+            // Financial Goal Setting & Future Planning
+            { question: "Why is it beneficial to start investing for retirement early, even with small amounts?", options: ["You get better tax rates when you're young", "The power of compound growth over a long time", "Investments are guaranteed to make money", "You can access the money anytime without penalty"], correctAnswerIndex: 1 },
+            { question: "True or False: Once you create a budget, you should never change it.", options: ["True", "False"], correctAnswerIndex: 1 }
+        ];
+
+        const memes = [
+            { src: "https://placehold.co/300x150/2ECC71/FFFFFF?text=Correct!+You+Rock!", caption: "You're on the right track!" },
+            { src: "https://placehold.co/300x150/3498DB/FFFFFF?text=Nice+One!+Money+Smart!", caption: "Financial wisdom unlocked!" },
+            { src: "https://placehold.co/300x150/9B59B6/FFFFFF?text=Great+Answer!+Finance+Pro!", caption: "That's how you do it!" },
+            { src: "https://placehold.co/300x150/F1C40F/000000?text=Awesome!+Keep+it+Up!", caption: "Smart money move!" }
+        ];
+        let currentMemeIndex2 = 0; // Unique meme index
+
+        // --- DOM Elements (declared here, assigned in window.onload) ---
+        let questionTextEl2, answerOptionsEl2, feedbackMessageEl2, memeAreaEl2, memeImageEl2, memeCaptionEl2, scoreTextEl2, nextQuestionBtn2, playAgainBtn2; // Unique variable names
+
+        // --- Game State ---
+        let currentQuestionIndex2 = 0; // Unique variable name
+        let score2 = 0; // Unique variable name
+        let questionsForCurrentRound2 = []; // Unique variable name
+
+        // --- Functions (modified to use unique variables) ---
+        // Function to shuffle an array (Fisher-Yates shuffle) - can be shared or made unique if needed
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        function selectRandomQuestions(allQuestions, count) {
+            const shuffled = [...allQuestions];
+            shuffleArray(shuffled);
+            return shuffled.slice(0, Math.min(count, shuffled.length));
+        }
+
+        function loadQuestion2() { // Unique function name
+            try {
+                if (!questionTextEl2 || !answerOptionsEl2 || !feedbackMessageEl2 || !memeAreaEl2 || !nextQuestionBtn2) {
+                    console.error("loadQuestion2: Critical DOM elements not initialized.");
+                    if (document.body && !questionTextEl2) {
+                        document.body.innerHTML = "<p style='color:red; font-family:sans-serif;'>Critical DOM element error. Game cannot continue.</p>";
+                    } else if (questionTextEl2) {
+                        questionTextEl2.textContent = "Error: Elements missing.";
+                    }
+                    return;
+                }
+
+                feedbackMessageEl2.style.display = 'none';
+                memeAreaEl2.style.display = 'none';
+                nextQuestionBtn2.style.display = 'none';
+
+                if (currentQuestionIndex2 < questionsForCurrentRound2.length) {
+                    const currentQuestion = questionsForCurrentRound2[currentQuestionIndex2];
+                    if (!currentQuestion || typeof currentQuestion.question !== 'string' || !Array.isArray(currentQuestion.options)) {
+                        console.error("Error: Invalid question data at index " + currentQuestionIndex2, currentQuestion);
+                        questionTextEl2.textContent = "Error: Corrupted question data.";
+                        if (playAgainBtn2) {
+                            playAgainBtn2.textContent = "Data Error - Play Again?";
+                            playAgainBtn2.style.display = 'inline-block';
+                        }
+                        return;
+                    }
+
+                    questionTextEl2.textContent = currentQuestion.question;
+                    answerOptionsEl2.innerHTML = '';
+
+                    currentQuestion.options.forEach((option, index) => {
+                        const button = document.createElement('button');
+                        button.textContent = option;
+                        button.classList.add('answer-btn');
+                        button.addEventListener('click', () => selectAnswer2(index, button)); // Call unique selectAnswer
+                        answerOptionsEl2.appendChild(button);
+                    });
+                } else {
+                    endGame2(); // Call unique endGame
+                }
+            } catch (error) {
+                console.error("Error in loadQuestion2:", error);
+                if(questionTextEl2) questionTextEl2.textContent = "Error loading question. Check console.";
+                if(playAgainBtn2) {
+                    playAgainBtn2.textContent = "Error - Try Reloading";
+                    playAgainBtn2.style.display = 'inline-block';
+                }
+            }
+        }
+
+        function selectAnswer2(selectedIndex, button) { // Unique function name
+            try {
+                const currentQuestion = questionsForCurrentRound2[currentQuestionIndex2];
+                const allButtons = answerOptionsEl2.querySelectorAll('.answer-btn');
+                allButtons.forEach(btn => btn.disabled = true);
+
+                if (selectedIndex === currentQuestion.correctAnswerIndex) {
+                    score2++;
+                    feedbackMessageEl2.textContent = "Correct! Well done!";
+                    feedbackMessageEl2.className = 'feedback-message correct';
+                    button.classList.add('correct');
+
+                    const randomMeme = memes[currentMemeIndex2 % memes.length];
+                    memeImageEl2.src = randomMeme.src;
+                    memeImageEl2.alt = randomMeme.caption;
+                    memeCaptionEl2.textContent = randomMeme.caption;
+                    memeAreaEl2.style.display = 'block';
+                    currentMemeIndex2++;
+
+                } else {
+                    feedbackMessageEl2.textContent = `Oops! The correct answer was: ${currentQuestion.options[currentQuestion.correctAnswerIndex]}`;
+                    feedbackMessageEl2.className = 'feedback-message incorrect';
+                    button.classList.add('incorrect');
+                    if (allButtons[currentQuestion.correctAnswerIndex]) {
+                        allButtons[currentQuestion.correctAnswerIndex].classList.add('correct');
+                    }
+                }
+
+                feedbackMessageEl2.style.display = 'block';
+                updateScoreDisplay2(); // Call unique updateScoreDisplay
+
+                if (currentQuestionIndex2 < questionsForCurrentRound2.length - 1) {
+                    nextQuestionBtn2.style.display = 'inline-block';
+                } else {
+                    playAgainBtn2.style.display = 'inline-block';
+                    playAgainBtn2.textContent = `Game Over! Final Score: ${score2}/${questionsForCurrentRound2.length}. Play Again?`;
+                }
+            } catch (error) {
+                console.error("Error in selectAnswer2:", error);
+                if(feedbackMessageEl2) feedbackMessageEl2.textContent = "Error processing answer. Check console.";
+            }
+        }
+
+        function updateScoreDisplay2() { // Unique function name
+            if (scoreTextEl2) {
+                scoreTextEl2.textContent = `Score: ${score2} / ${questionsForCurrentRound2.length}`;
+            }
+        }
+
+        function handleNextQuestion2() { // Unique function name
+            currentQuestionIndex2++;
+            loadQuestion2();
+        }
+
+        function endGame2() { // Unique function name
+            try {
+                if(questionTextEl2) questionTextEl2.textContent = `Game Over! You scored ${score2} out of ${questionsForCurrentRound2.length}.`;
+                if(answerOptionsEl2) answerOptionsEl2.innerHTML = '';
+                if(feedbackMessageEl2) feedbackMessageEl2.style.display = 'none';
+                if(memeAreaEl2) memeAreaEl2.style.display = 'none';
+                if(nextQuestionBtn2) nextQuestionBtn2.style.display = 'none';
+                if(playAgainBtn2) {
+                    playAgainBtn2.style.display = 'inline-block';
+                    playAgainBtn2.textContent = `Final Score: ${score2}/${questionsForCurrentRound2.length}. Play Again?`;
+                }
+            } catch (error) {
+                console.error("Error in endGame2:", error);
+                if(questionTextEl2) questionTextEl2.textContent = "Error finishing game. Check console.";
+            }
+        }
+
+        function initializeGame2() { // Unique function name
+            try {
+                currentQuestionIndex2 = 0;
+                score2 = 0;
+                currentMemeIndex2 = 0;
+
+                if (masterQuestionList.length === 0) {
+                    console.error("No questions available in the 'masterQuestionList'.");
+                    if(questionTextEl2) questionTextEl2.textContent = "No questions loaded. Please define questions in masterQuestionList.";
+                    if(scoreTextEl2) scoreTextEl2.textContent = "Score: 0 / 0";
+                    return;
+                }
+
+                questionsForCurrentRound2 = selectRandomQuestions(masterQuestionList, questionsPerGame2);
+
+                if (questionsForCurrentRound2.length === 0) {
+                    console.error("Failed to select any questions for the round. Master list might be smaller than questionsPerGame or an issue in selection.");
+                    if(questionTextEl2) questionTextEl2.textContent = "Could not start game: No questions selected.";
+                    if(scoreTextEl2) scoreTextEl2.textContent = "Score: 0 / 0";
+                    if(playAgainBtn2) {
+                        playAgainBtn2.textContent = "Error - Try Again";
+                        playAgainBtn2.style.display = 'inline-block';
+                    }
+                    return;
+                }
+
+                console.log(`Starting new game 2 with ${questionsForCurrentRound2.length} random questions.`);
+                updateScoreDisplay2();
+                if(playAgainBtn2) playAgainBtn2.style.display = 'none';
+                loadQuestion2();
+            } catch (error) {
+                console.error("Error in initializeGame2:", error);
+                if(questionTextEl2) questionTextEl2.textContent = "Error starting/restarting game. Check console.";
+            }
+        }
+
+        // --- Initialize Game on Page Load ---
+        // Avoid window.onload for multiple instances. Create a self-executing function
+        (function() {
+            try {
+                questionTextEl2 = document.getElementById('game2-question-text');
+                answerOptionsEl2 = document.getElementById('game2-answer-options');
+                feedbackMessageEl2 = document.getElementById('game2-feedback-message');
+                memeAreaEl2 = document.getElementById('game2-meme-area');
+                memeImageEl2 = document.getElementById('game2-meme-image');
+                memeCaptionEl2 = document.getElementById('game2-meme-caption');
+                scoreTextEl2 = document.getElementById('game2-score-text');
+                nextQuestionBtn2 = document.getElementById('game2-next-question-btn');
+                playAgainBtn2 = document.getElementById('game2-play-again-btn');
+
+                const criticalElements2 = { questionTextEl2, answerOptionsEl2, feedbackMessageEl2, memeAreaEl2, memeImageEl2, memeCaptionEl2, scoreTextEl2, nextQuestionBtn2, playAgainBtn2 };
+                for (const key in criticalElements2) {
+                    if (!criticalElements2[key]) {
+                        console.error(`FATAL: DOM element for '${key}' not found in game 2.`);
+                        if (document.body) {
+                            // Target specific game container to avoid replacing entire body
+                            const gameContainer = document.querySelector('.game-container'); // Find the first game container
+                            if (gameContainer) {
+                                gameContainer.innerHTML = `<div style="color:red; font-family:sans-serif; padding:20px; text-align:center;">Critical Error: An HTML element is missing.<br>Game cannot start. Check console (F12).</div>`;
+                            } else {
+                                document.body.innerHTML = `<div style="color:red; font-family:sans-serif; padding:20px; text-align:center;">A critical error occurred. Game cannot start.<br>Please check the browser console (F12) for details.</div>`;
+                            }
+                        }
+                        return;
+                    }
+                }
+
+                nextQuestionBtn2.addEventListener('click', handleNextQuestion2);
+                playAgainBtn2.addEventListener('click', initializeGame2);
+
+                initializeGame2();
+
+            } catch (error) {
+                console.error("Error during game 2 initialization:", error);
+                if (document.body) {
+                    const gameContainer = document.querySelector('.game-container');
+                    if (gameContainer) {
+                        gameContainer.innerHTML = `<div style="color:red; font-family:sans-serif; padding:20px; text-align:center;">A critical error occurred on load. Game cannot start.<br>Please check the browser console (F12) for details.</div>`;
+                    } else {
+                        document.body.innerHTML = `<div style="color:red; font-family:sans-serif; padding:20px; text-align:center;">A critical error occurred on page load. Game cannot start.<br>Please check the browser console (F12) for details.</div>`;
+                    }
+                }
+            }
+        })(); // Self-executing function to replace window.onload
+    </script>
+</body>
+</html>
