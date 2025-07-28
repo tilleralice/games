@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Financial Literacy Game</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Press Start 2P', cursive;
+            background-color: #1a202c; /* Dark background for a game feel */
+            color: #e2e8f0; /* Light text */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 1rem;
+            box-sizing: border-box;
+        }
+        .game-container {
+            background-color: #2d3748; /* Slightly lighter card background */
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            width: 100%;
+            max-width: 600px;
+            text-align: center;
+        }
+        .question-text {
+            font-size: 1.25rem; /* 20px */
+            margin-bottom: 1.5rem; /* 24px */
+            line-height: 1.6;
+            color: #a0aec0; /* Lighter gray for question text */
+        }
+        .answer-btn {
+            background-color: #4a5568; /* Button background */
+            color: #e2e8f0;
+            border: 2px solid #718096; /* Button border */
+            padding: 0.75rem 1.5rem; /* 12px 24px */
+            margin: 0.5rem; /* 8px */
+            border-radius: 0.5rem; /* 8px */
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1rem; /* 16px */
+            width: calc(100% - 1rem); /* Full width buttons on small screens */
+        }
+        .answer-btn:hover {
+            background-color: #718096; /* Button hover background */
+            border-color: #a0aec0;
+        }
+        .answer-btn.correct {
+            background-color: #38a169; /* Green for correct */
+            border-color: #2f855a;
+            color: white;
+        }
+        .answer-btn.incorrect {
+            background-color: #e53e3e; /* Red for incorrect */
+            border-color: #c53030;
+            color: white;
+        }
+        .score-text {
+            font-size: 1.125rem; /* 18px */
+            margin-top: 1.5rem; /* 24px */
+            color: #cbd5e0;
+        }
+        .meme-container {
+            margin-top: 1.5rem; /* 24px */
+            min-height: 200px; /* Reserve space for meme */
+        }
+        .meme-image {
+            max-width: 100%;
+            height: auto;
+            border-radius: 0.5rem; /* 8px */
+            border: 3px solid #4a5568;
+        }
+        .feedback-message {
+            margin-top: 1rem; /* 16px */
+            padding: 0.75rem; /* 12px */
+            border-radius: 0.5rem; /* 8px */
+            font-size: 1rem; /* 16px */
+        }
+        .feedback-message.correct {
+            background-color: #38a169; /* Green */
+            color: white;
+        }
+        .feedback-message.incorrect {
+            background-color: #e53e3e; /* Red */
+            color: white;
+        }
+        .control-btn {
+            background-color: #f6e05e; /* Yellow for control buttons */
+            color: #1a202c; /* Dark text on yellow */
+            border: 2px solid #ecc94b;
+            padding: 0.75rem 1.5rem;
+            margin-top: 1.5rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            font-size: 1rem;
+        }
+        .control-btn:hover {
+            background-color: #ecc94b;
+        }
+        /* Ensure buttons stack nicely on small screens */
+        @media (min-width: 640px) { /* sm breakpoint in Tailwind */
+            .answer-options-grid {
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 1rem;
+            }
+            .answer-btn {
+                width: auto; /* Auto width on larger screens */
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1 class="text-3xl font-bold mb-6 text-yellow-400">Finance Whiz Quiz!</h1>
+
+        <div id="question-area">
+            <p id="question-text" class="question-text">Loading question...</p>
+            <div id="answer-options" class="answer-options-grid">
+                </div>
+        </div>
+
+        <div id="feedback-area" class="mt-4">
+            <p id="feedback-message" class="feedback-message" style="display: none;"></p>
+        </div>
+
+        <div id="meme-area" class="meme-container" style="display: none;">
+            <img id="meme-image" src="" alt="Money Meme" class="meme-image mx-auto">
+            <p id="meme-caption" class="mt-2 text-sm text-gray-400"></p>
+        </div>
+
+        <p id="score-text" class="score-text">Score: 0</p>
+
+        <button id="next-question-btn" class="control-btn" style="display: none;">Next Question</button>
+        <button id="play-again-btn" class="control-btn" style="display: none;">Play Again?</button>
+    </div>
+
+    <script>
+        // --- Game Data ---
+        const questions = [
+            {
+                question: "What does APR stand for?",
+                options: ["Annual Percentage Rate", "Applied Percentage Ratio", "Annual Profit Return", "Approved Payment Roster"],
+                correctAnswerIndex: 0,
+                memePlaceholder: "https://placehold.co/300x200/2ECC71/FFFFFF?text=APR+Master!",
+                memeCaption: "You got it! APR explained!"
+            },
+            {
+                question: "What is a common recommended percentage of your income to save?",
+                options: ["1-5%", "5-10%", "10-20%", "20-30%"],
+                correctAnswerIndex: 2,
+                memePlaceholder: "https://placehold.co/300x200/3498DB/FFFFFF?text=Savings+Guru!",
+                memeCaption: "Saving like a boss!"
+            },
+            {
+                question: "What is diversification in investing?",
+                options: [
+                    "Putting all money in one stock",
+                    "Spreading investments across different assets",
+                    "Only investing in your home country",
+                    "Investing only in cryptocurrency"
+                ],
+                correctAnswerIndex: 1,
+                memePlaceholder: "https://placehold.co/300x200/E74C3C/FFFFFF?text=Diversify!",
+                memeCaption: "Don't put all your eggs in one basket!"
+            },
+            {
+                question: "What is a credit score primarily used for?",
+                options: [
+                    "To get a driver's license",
+                    "To determine creditworthiness for loans",
+                    "To apply for a passport",
+                    "To measure your IQ"
+                ],
+                correctAnswerIndex: 1,
+                memePlaceholder: "https://placehold.co/300x200/F1C40F/000000?text=Credit+Score+Pro!",
+                memeCaption: "Your credit score matters!"
+            },
+            {
+                question: "What is compound interest?",
+                options: [
+                    "Simple interest paid annually",
+                    "Interest only on the principal amount",
+                    "Interest calculated on initial principal and accumulated interest",
+                    "A type of bank fee"
+                ],
+                correctAnswerIndex: 2,
+                memePlaceholder: "https://placehold.co/300x200/9B59B6/FFFFFF?text=Compound+King!",
+                memeCaption: "The magic of compounding!"
+            },
+            {
+                question: "Which of these is generally considered a 'want' rather than a 'need'?",
+                options: ["Basic groceries", "Rent/Mortgage payment", "Designer shoes", "Utility bills"],
+                correctAnswerIndex: 2,
+                memePlaceholder: "https://placehold.co/300x200/1ABC9C/FFFFFF?text=Needs+vs+Wants!",
+                memeCaption: "Smart spending choices!"
+            },
+            {
+                question: "What is a budget?",
+                options: [
+                    "A type of investment",
+                    "A plan for how to spend and save money",
+                    "A government tax form",
+                    "A loan from a bank"
+                ],
+                correctAnswerIndex: 1,
+                memePlaceholder: "https://placehold.co/300x200/E67E22/FFFFFF?text=Budget+Boss!",
+                memeCaption: "Master your money with a budget!"
+            }
+        ];
+
+        // --- DOM Elements ---
+        const questionTextEl = document.getElementById('question-text');
+        const answerOptionsEl = document.getElementById('answer-options');
+        const feedbackMessageEl = document.getElementById('feedback-message');
+        const memeAreaEl = document.getElementById('meme-area');
+        const memeImageEl = document.getElementById('meme-image');
+        const memeCaptionEl = document.getElementById('meme-caption');
+        const scoreTextEl = document.getElementById('score-text');
+        const nextQuestionBtn = document.getElementById('next-question-btn');
+        const playAgainBtn = document.getElementById('play-again-btn');
+
+        // --- Game State ---
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let shuffledQuestions = [];
+
+        // --- Functions ---
+
+        // Function to shuffle an array (Fisher-Yates shuffle)
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+
+        // Function to load and display the current question
+        function loadQuestion() {
+            // Hide feedback and meme from previous question
+            feedbackMessageEl.style.display = 'none';
+            memeAreaEl.style.display = 'none';
+            nextQuestionBtn.style.display = 'none'; // Hide next button until an answer is selected
+
+            if (currentQuestionIndex < shuffledQuestions.length) {
+                const currentQuestion = shuffledQuestions[currentQuestionIndex];
+                questionTextEl.textContent = currentQuestion.question;
+                answerOptionsEl.innerHTML = ''; // Clear previous options
+
+                currentQuestion.options.forEach((option, index) => {
+                    const button = document.createElement('button');
+                    button.textContent = option;
+                    button.classList.add('answer-btn');
+                    button.addEventListener('click', () => selectAnswer(index, button));
+                    answerOptionsEl.appendChild(button);
+                });
+            } else {
+                endGame();
+            }
+        }
+
+        // Function to handle answer selection
+        function selectAnswer(selectedIndex, button) {
+            const currentQuestion = shuffledQuestions[currentQuestionIndex];
+            const allButtons = answerOptionsEl.querySelectorAll('.answer-btn');
+
+            // Disable all buttons after an answer is selected
+            allButtons.forEach(btn => btn.disabled = true);
+
+            if (selectedIndex === currentQuestion.correctAnswerIndex) {
+                score++;
+                feedbackMessageEl.textContent = "Correct! Well done!";
+                feedbackMessageEl.className = 'feedback-message correct'; // Reset classes and add correct
+                button.classList.add('correct');
+
+                // Show meme
+                memeImageEl.src = currentQuestion.memePlaceholder;
+                memeImageEl.alt = currentQuestion.memeCaption; // Good for accessibility
+                memeCaptionEl.textContent = currentQuestion.memeCaption;
+                memeAreaEl.style.display = 'block';
+
+            } else {
+                feedbackMessageEl.textContent = `Oops! The correct answer was: ${currentQuestion.options[currentQuestion.correctAnswerIndex]}`;
+                feedbackMessageEl.className = 'feedback-message incorrect'; // Reset classes and add incorrect
+                button.classList.add('incorrect');
+                // Highlight the correct answer
+                allButtons[currentQuestion.correctAnswerIndex].classList.add('correct');
+            }
+
+            feedbackMessageEl.style.display = 'block';
+            updateScore();
+
+            // Show next question button or end game button
+            if (currentQuestionIndex < shuffledQuestions.length - 1) {
+                nextQuestionBtn.style.display = 'inline-block';
+            } else {
+                playAgainBtn.style.display = 'inline-block';
+                playAgainBtn.textContent = `Game Over! Final Score: ${score}/${shuffledQuestions.length}. Play Again?`;
+            }
+        }
+
+        // Function to update the displayed score
+        function updateScore() {
+            scoreTextEl.textContent = `Score: ${score}`;
+        }
+
+        // Function to proceed to the next question
+        function handleNextQuestion() {
+            currentQuestionIndex++;
+            loadQuestion();
+        }
+
+        // Function to end the game
+        function endGame() {
+            questionTextEl.textContent = `Game Over! You scored ${score} out of ${shuffledQuestions.length}.`;
+            answerOptionsEl.innerHTML = ''; // Clear answer options
+            feedbackMessageEl.style.display = 'none';
+            memeAreaEl.style.display = 'none';
+            nextQuestionBtn.style.display = 'none';
+            playAgainBtn.style.display = 'inline-block';
+            playAgainBtn.textContent = `Final Score: ${score}/${shuffledQuestions.length}. Play Again?`;
+        }
+
+        // Function to restart the game
+        function restartGame() {
+            currentQuestionIndex = 0;
+            score = 0;
+            shuffleArray(questions); // Re-shuffle questions for a new game
+            shuffledQuestions = [...questions]; // Create a new shuffled copy for the current game
+            updateScore();
+            playAgainBtn.style.display = 'none';
+            loadQuestion();
+        }
+
+        // --- Event Listeners ---
+        nextQuestionBtn.addEventListener('click', handleNextQuestion);
+        playAgainBtn.addEventListener('click', restartGame);
+
+        // --- Initialize Game ---
+        window.onload = function() {
+            shuffleArray(questions); // Shuffle questions initially
+            shuffledQuestions = [...questions]; // Use a copy for the current game session
+            loadQuestion();
+        };
+    </script>
+</body>
+</html>
